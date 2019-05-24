@@ -5,11 +5,12 @@ AWAD API requester.
 import aiohttp
 import asyncio
 import settings
+from xmlschema import XMLSchema
 import xml.etree.ElementTree as ETree
 
 from datetime import datetime
 
-from pyawad.util import updated
+from pyawad.util import updated, load_schema
 
 
 class RequestException(Exception):
@@ -20,6 +21,15 @@ class RequestException(Exception):
     self._request = request
     # TODO: switch type to base exception inheritance.
     self.type = request.error
+
+
+class InvalidRequestContent(RequestException):
+  """ If request progress status loading attempts is exceed. """
+  _content = None
+
+  def __init__(self, request, content):
+    super().__init__(request)
+    self._content = content
 
 
 class RequestNotCreated(RequestException):
@@ -99,7 +109,24 @@ class BaseRequest:
       Language=settings.DEFAULT_LANGUAGE
     )
 
-  async def _request(self, url=None, params=None, **kwargs):
+  async def _parse_response(self, response, schema=None):
+    """ Parse request response to etree. """
+    content = await response.read()
+    content = content.decode('utf-8')
+
+    try:
+      if schema and not schema.is_valid(content):
+        raise InvalidRequestContent(self, content)
+
+    except Exception as e:
+      print(e)
+      import pdb; pdb.set_trace()
+      pass
+
+    return ETree.fromstring(content)
+
+
+  async def _request(self, url=None, params=None, schema=None, **kwargs):
     """ Make request to remote API. """
     url = self.get_url(endpoint=url) if url is None or '/' not in url else url
     params = params or {}
@@ -107,8 +134,7 @@ class BaseRequest:
 
     try:
       async with self.client.get(url, params=params) as response:
-        content = await response.read()
-        etree = ETree.fromstring(content)
+        etree = await self._parse_response(response, schema)
         error = etree.attrib.get('Error')
 
         if error:
@@ -141,7 +167,6 @@ class RouteRequest(BaseRequest):
   Result includes list of directions within.
   Request identity using for searching AWAD fares.
   """
-
   STATUS_TIMEOUT = 2
   STATUS_ATTEMPTS = 10
 
@@ -170,6 +195,9 @@ class RouteRequest(BaseRequest):
     self.num_child = childs
     self.num_infant = infants
     self.service_class = service_class
+
+    if adults + childs + infants > 8:
+      raise aiohttp.HTTPBadRequest('Maximum number passengers must be less or equal than 8')
 
   @property
   def attempts(self):
@@ -220,7 +248,8 @@ class RouteRequest(BaseRequest):
       # TODO: switch to pyawad exception.
       raise Exception('AWAD request which has identity cannot be created. Use "fetch" instead.')
 
-    response = await self._request('NewRequest')
+    schema = load_schema('pyawad/schemas/response/NewRequest.xsd')
+    response = await self._request('NewRequest', schema=schema)
 
     if response is None:
       raise RequestNotCreated(self)
@@ -234,6 +263,7 @@ class RouteRequest(BaseRequest):
     await self.wait()
 
     params = { 'R': self.uid }
+    schema = load_schema('pyawad/schemas/response/Fares.xsd')
     response = await self._request('Fares', params=params)
 
     for F in response.findall('F'):
@@ -251,7 +281,8 @@ class RouteRequest(BaseRequest):
       raise Exception('You must create AWAD request before fetching it.')
 
     params = { 'R': self.uid }
-    response = await self._request('RequestInfo', params=params)
+    schema = load_schema('pyawad/schemas/response/RequestInfo.xsd')
+    response = await self._request('RequestInfo', params=params, schema=schema)
 
   async def status(self):
     """ Load request search progress status. """
@@ -261,7 +292,8 @@ class RouteRequest(BaseRequest):
 
     if self.is_completed is not True:
       params = { 'R': self.uid }
-      response = await self._request('RequestState', params=params)
+      schema = load_schema('pyawad/schemas/response/RequestState.xsd')
+      response = await self._request('RequestState', params=params, schema=schema)
       progress = int(response.attrib.get('Completed'))
 
       self._progress = progress

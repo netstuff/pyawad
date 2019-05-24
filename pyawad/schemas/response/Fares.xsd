@@ -1,0 +1,420 @@
+<xs:schema xml:lang="EN" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.1">
+
+  <xs:annotation>
+    <xs:documentation>
+      Response body on searching fares.
+    </xs:documentation>
+  </xs:annotation>
+
+
+  <!-- TODO: move to root scheme. -->
+  <xs:simpleType name="IntBoolean">
+    <xs:restriction base="xs:int">
+      <xs:enumeration value="0" />
+      <xs:enumeration value="1" />
+    </xs:restriction>
+  </xs:simpleType>
+
+
+  <!-- TODO: move to root scheme. -->
+  <xs:simpleType name="IATACode">
+    <xs:annotation>
+      <xs:documentation>
+        IATA code.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:pattern value="^\w{1,3}$"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+
+  <!-- TODO: move to root scheme. -->
+  <xs:simpleType name="LanguageCode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="RU" />
+      <xs:enumeration value="EN" />
+    </xs:restriction>
+  </xs:simpleType>
+
+
+  <!-- TODO: move to root scheme. -->
+  <xs:simpleType name="CurrencyCode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="RUB" />
+      <xs:enumeration value="USD" />
+      <xs:enumeration value="EUR" />
+      <xs:enumeration value="CHF" />
+      <xs:enumeration value="UAH" />
+    </xs:restriction>
+  </xs:simpleType>
+
+
+  <!-- TODO: move to root scheme. -->
+  <xs:simpleType name="TimeOfDay">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Day" />
+      <xs:enumeration value="Evening" />
+      <xs:enumeration value="Morning" />
+      <xs:enumeration value="Night" />
+    </xs:restriction>
+  </xs:simpleType>
+
+
+  <!-- TODO: move to root scheme. -->
+  <xs:simpleType name="TimeOfDayShort">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="D" />
+      <xs:enumeration value="E" />
+      <xs:enumeration value="M" />
+      <xs:enumeration value="N" />
+    </xs:restriction>
+  </xs:simpleType>
+
+
+  <xs:complexType name="FilterOptionAttributes">
+    <xs:attribute name="Selected" use="optional"></xs:attribute>
+    <xs:attribute name="Disabled" use="optional"></xs:attribute>
+  </xs:complexType>
+
+
+  <xs:simpleType name="FlightNumbers">
+    <xs:annotation>
+      <xs:documentation>
+        Flight numbers separated with ";" sybmol.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:pattern value="(\w+);?"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+
+  <xs:simpleType name="SearchFaresError">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="InvalidRequest" />
+      <xs:enumeration value="RequestExpired" />
+      <xs:enumeration value="SearchNotComplete" />
+      <xs:enumeration value="NoFaresFound" />
+    </xs:restriction>
+  </xs:simpleType>
+
+
+  <xs:complexType name="DirectionFilter">
+    <xs:annotation>
+      <xs:documentation>
+        Direction filter options on fares searching.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence>
+      <xs:element name="BrdCng">
+        <xs:annotation>
+          <xs:documentation>
+
+          </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="V" type="IntBoolean" minOccurs="2" maxOccurs="2" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="DepTm">
+        <xs:annotation>
+          <xs:documentation>
+            Departure time of day.
+          </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="V" type="TimeOfDay" minOccurs="4" maxOccurs="4" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="ArrTm">
+        <xs:annotation>
+          <xs:documentation>
+            Arrival time of day.
+          </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="V" type="TimeOfDay" minOccurs="4" maxOccurs="4" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="DepApt">
+        <xs:annotation>
+          <xs:documentation>
+            Airport of departure.
+          </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="V" type="IATACode" maxOccurs="unbounded" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="ArrApt">
+        <xs:annotation>
+          <xs:documentation>
+            Airport of arrival.
+          </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="V" type="IATACode" maxOccurs="unbounded" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+
+  <xs:complexType name="FareItem">
+    <xs:annotation>
+      <xs:documentation>
+        Fare item typical attributes.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence maxOccurs="unbounded">
+      <xs:element name="Dir">
+        <xs:complexType>
+          <xs:attribute name="BrdCng" type="IntBoolean" />
+          <xs:attribute name="ArrApt" type="IATACode" />
+          <xs:attribute name="DepApt" type="IATACode" />
+          <xs:attribute name="ArrTm" type="TimeOfDayShort" />
+          <xs:attribute name="DepTm" type="TimeOfDayShort" />
+          <xs:attribute name="FltNum" type="FlightNumbers" />
+          <xs:attribute name="Hr" type="xs:int" />
+          <xs:attribute name="Min" type="xs:int" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+
+    <xs:attribute name="Id" type="xs:string"></xs:attribute>
+
+    <xs:attribute name="AI" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          Additional information markers.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="AT" type="xs:int">
+      <xs:annotation>
+        <xs:documentation>
+          Total cost of proposal (all flights for all passengers).
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="Avl" type="xs:boolean">
+      <xs:annotation>
+        <xs:documentation>
+          Booking is available.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="CS" type="xs:int">
+      <xs:annotation>
+        <xs:documentation>
+          Time in minutes which is required to processing joint flights of the airlines.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="HB" type="xs:boolean">
+      <xs:annotation>
+        <xs:documentation>
+          Hub fare flag.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="MM" type="xs:boolean">
+      <xs:annotation>
+        <xs:documentation>
+          Order should be processing manually.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="MMC" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          Reasons to order manual processing.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="MT" type="xs:boolean">
+      <xs:annotation>
+        <xs:documentation>
+          Every passenger will recieve multiple tickets for flight directions.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="Res" type="xs:boolean">
+      <xs:annotation>
+        <xs:documentation>
+          Ticket can be booked.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="Sts">
+      <xs:annotation>
+        <xs:documentation>
+          Minimal available seats.
+        </xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:union>
+          <xs:simpleType>
+            <xs:restriction base="xs:integer" />
+          </xs:simpleType>
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="unknown" />
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:union>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+
+
+  <xs:element name="Fares">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Filter">
+          <xs:complexType>
+            <xs:sequence maxOccurs="unbounded">
+              <xs:element name="Dir" type="DirectionFilter" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="Arln" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:sequence maxOccurs="unbounded">
+              <xs:element name="FareVerbose" type="FareItem" />
+            </xs:sequence>
+
+            <xs:attribute name="C" type="IATACode" />
+            <xs:attribute name="N" type="xs:string" />
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+
+      <xs:attribute name="C" type="CurrencyCode">
+        <xs:annotation>
+          <xs:documentation>
+            Code of tickets prices currency.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+
+      <xs:attribute name="CT">
+        <xs:annotation>
+          <xs:documentation>
+            Filter by flight type.
+          </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="All" />
+            <xs:enumeration value="Direct" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+
+      <xs:attribute name="L" type="LanguageCode">
+        <xs:annotation>
+          <xs:documentation>
+            Output language code.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+
+      <xs:attribute name="PN" type="xs:int">
+        <xs:annotation>
+          <xs:documentation>
+            Number of current results page.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+
+      <xs:attribute name="PS" type="xs:int">
+        <xs:annotation>
+          <xs:documentation>
+            Size of current results page.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+
+      <xs:attribute name="PT">
+        <xs:annotation>
+          <xs:documentation>
+            Type of tickets prices.
+          </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="All" />
+            <xs:enumeration value="Adult" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+
+      <xs:attribute name="R" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            Request identifier.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+
+      <xs:attribute name="SortBy">
+        <xs:annotation>
+          <xs:documentation>
+            Sorting attribute name.
+          </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Price" />
+            <xs:enumeration value="Time" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+
+      <xs:attribute name="ViewType">
+        <xs:annotation>
+          <xs:documentation>
+            View type of search results.
+          </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Matrix" />
+            <xs:enumeration value="List" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+
+      <xs:attribute name="Error" type="SearchFaresError"></xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

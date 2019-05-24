@@ -1,0 +1,149 @@
+<xs:schema xml:lang="EN" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.1">
+
+  <xs:annotation>
+    <xs:documentation>
+      Response body on active request info.
+    </xs:documentation>
+  </xs:annotation>
+
+  <!-- TODO: move to root scheme. -->
+  <xs:simpleType name="ISODate">
+    <xs:annotation>
+      <xs:documentation>
+        date in ISO fromat.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:pattern value="^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])$"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- TODO: move to root scheme. -->
+  <xs:simpleType name="RouteComplexCode">
+    <xs:annotation>
+      <xs:documentation>
+        Complex IATA code of source and destination cities.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:pattern value="^([A-Z]{1,3}){2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="RequestInfoError">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="InvalidRequest" />
+      <xs:enumeration value="RequestExpired" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="RouteDirection">
+    <xs:annotation>
+      <xs:documentation>
+        A route segment.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="Route" type="RouteComplexCode"></xs:attribute>
+    <xs:attribute name="DC" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          Departure country.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="DP" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          Departure city or airport.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="AC" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          Arrival country.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="AP" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          Arrival city or airport.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="DD" type="ISODate">
+      <xs:annotation>
+        <xs:documentation>
+          Derparture date.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:element name="RequestInfo">
+    <xs:complexType>
+      <xs:sequence minOccurs="1" maxOccurs="unbounded">
+        <xs:element name="Direction" />
+      </xs:sequence>
+
+      <xs:attribute name="AD">
+        <xs:annotation>
+          <xs:documentation>
+            Number of adult passengers.
+          </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:minInclusive value="1"/>
+            <xs:maxInclusive value="6"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+
+      <xs:attribute name="CN">
+        <xs:annotation>
+          <xs:documentation>
+            Number of children.
+          </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:minInclusive value="0"/>
+            <xs:maxInclusive value="4"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+
+      <xs:attribute name="IN">
+        <xs:annotation>
+          <xs:documentation>
+            Number of infants.
+          </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:minInclusive value="0"/>
+            <xs:maxInclusive value="2"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+
+      <xs:attribute name="SC">
+        <xs:annotation>
+          <xs:documentation>
+            Class of service.
+          </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="E" />
+            <xs:enumeration value="B" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+
+      <xs:attribute name="Error" type="RequestInfoError"></xs:attribute>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -1,0 +1,35 @@
+<xs:schema xml:lang="EN" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.1">
+
+  <xs:annotation>
+    <xs:documentation>
+      Response body on getting request state.
+    </xs:documentation>
+  </xs:annotation>
+
+  <xs:simpleType name="RequestStateError">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="InvalidRequest" />
+      <xs:enumeration value="RequestExpired" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:element name="RequestState">
+    <xs:complexType>
+      <xs:attribute name="Error" type="RequestStateError"></xs:attribute>
+
+      <xs:attribute name="Completed">
+        <xs:annotation>
+          <xs:documentation>
+            Request progress in percents.
+          </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:minInclusive value="0"/>
+            <xs:maxInclusive value="100"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

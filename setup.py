@@ -41,8 +41,9 @@ setup(
     url='https://github.com/netstuff/pyawad',
     download_url='https://github.com/netstuff/pyawad/archive/master.zip',
     install_requires = [
-      'aiohttp==3.5.4',
+      'aiohttp',
       'pytest-asyncio-0.10.0',
+      'xmlschema',
     ],
     classifiers = [
         'Environment :: Web Environment',
