@@ -2,13 +2,13 @@ import os
 
 
 class API:
-  """
-  AWAD API settings.
-  """
+    """
+    AWAD API settings.
+    """
 
-  schema = 'http'
-  host = 'api.anywayanyday.com/api'
-  partner_code = os.environ.get('AWAD_PARNTER_CODE', 'testapid')
+    schema = 'http'
+    host = 'api.anywayanyday.com/api'
+    partner_code = os.environ.get('AWAD_PARNTER_CODE', 'testapid')
 
 
 # Default base requests parameters.
