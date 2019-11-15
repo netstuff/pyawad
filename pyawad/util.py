@@ -15,4 +15,4 @@ def updated(d, **kwargs):
 
 def load_schema(path):
     """ Load schema from file. """
-    return xmlschema.XMLSchema(path)
+    return xmlschema.XMLSchema(os.path.join(os.path.dirname(__file__), path))

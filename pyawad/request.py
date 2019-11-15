@@ -160,6 +160,11 @@ class BaseRequest:
 
             self._client = None
 
+    def to_dict(self):
+        return {
+            'uid': self.uid,
+        }
+
 
 class RouteRequest(BaseRequest):
     """
@@ -248,7 +253,7 @@ class RouteRequest(BaseRequest):
             # TODO: switch to pyawad exception.
             raise Exception('AWAD request which has identity cannot be created. Use "fetch" instead.')
 
-        schema = load_schema('pyawad/schemas/response/NewRequest.xsd')
+        schema = load_schema('schemas/response/NewRequest.xsd')
         response = await self._request('NewRequest', schema=schema)
 
         if response is None:
@@ -258,20 +263,22 @@ class RouteRequest(BaseRequest):
 
         return self
 
-    async def find_fares(self, autoload=False):
+    async def find_fares(self):
         """ Find fares identifiers by passed route. """
         await self.wait()
 
         params = { 'R': self.uid }
-        schema = load_schema('pyawad/schemas/response/Fares.xsd')
+        schema = load_schema('schemas/response/Fares.xsd')
         response = await self._request('Fares', params=params)
 
         for F in response.findall('F'):
-            fare = FareRequest(F.attrib.get('Id'), self)
+            preload_info = {
+                'info': F.attrib.get('AI'),
+                'amount': F.attrib.get('AT'),
+                'is_available': F.attrib.get('Avl', '').lower() == 'true',
+            }
 
-            if autoload is True:
-                await fare.fetch()
-
+            fare = FareRequest(self, F.attrib.get('Id'), **preload_info)
             yield fare
 
     async def fetch(self):
@@ -281,7 +288,7 @@ class RouteRequest(BaseRequest):
             raise Exception('You must create AWAD request before fetching it.')
 
         params = { 'R': self.uid }
-        schema = load_schema('pyawad/schemas/response/RequestInfo.xsd')
+        schema = load_schema('schemas/response/RequestInfo.xsd')
         response = await self._request('RequestInfo', params=params, schema=schema)
 
     async def status(self):
@@ -292,7 +299,7 @@ class RouteRequest(BaseRequest):
 
         if self.is_completed is not True:
             params = { 'R': self.uid }
-            schema = load_schema('pyawad/schemas/response/RequestState.xsd')
+            schema = load_schema('schemas/response/RequestState.xsd')
             response = await self._request('RequestState', params=params, schema=schema)
             progress = int(response.attrib.get('Completed'))
 
@@ -314,6 +321,18 @@ class RouteRequest(BaseRequest):
 
         return self
 
+    def to_dict(self):
+        return updated(
+            super().to_dict(),
+            departure_at=self.departure_at.isoformat(),
+            departure_from=self.departure_from,
+            arrival_to=self.arrival_to,
+            num_adult=self.num_adult,
+            num_child=self.num_child,
+            num_infant=self.num_infant,
+            service_class=self.service_class,
+        )
+
 
 class FareRequest(BaseRequest):
     """
@@ -324,8 +343,9 @@ class FareRequest(BaseRequest):
     _route_request = None
 
     # Fare attributes.
-    _amount = None
-    _currency = None
+    amount = None
+    currency = None
+    info = None
     is_available = None
     seats = None
 
@@ -334,9 +354,15 @@ class FareRequest(BaseRequest):
     infants = None
     children = None
 
-    def __init__(self, _id, request, **kwargs):
+    def __init__(self, request, _id, **kwargs):
         super().__init__(_id=_id)
         self._route_request = request
+
+        self.amount = kwargs.get('amount')
+        self.currency = kwargs.get('currency')
+        self.is_available = kwargs.get('is_available')
+        self.info = kwargs.get('info')
+        self.seats = kwargs.get('seats')
 
     @property
     def request(self):
@@ -358,7 +384,7 @@ class FareRequest(BaseRequest):
         # Get fare attributes.
         self.amount = int(response.attrib.get('TotalAmount'))
         self.currency = response.attrib.get('Currency')
-        self.is_available = response.attrib.get('Available') == 'True'
+        self.is_available = response.attrib.get('Available').lower() == 'true'
         self.seats = int(seats) if seats != 'unknown' else None
 
         # Get passengers.
@@ -366,3 +392,14 @@ class FareRequest(BaseRequest):
         self.adults = passengers.attrib.get('Adults')
         self.infants = passengers.attrib.get('Infants')
         self.children = passengers.attrib.get('Children')
+
+    def to_dict(self):
+        return updated(
+            super().to_dict(),
+            amount=self.amount,
+            currency=self.currency,
+            is_available=self.is_available,
+            info=self.info,
+            seats=self.seats,
+            request=self.request.uid,
+        )
